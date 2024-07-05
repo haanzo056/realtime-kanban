@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  boards    Board[]
+}
+
+model Board {
+  id        String       @id @default(cuid())
+  title     String
+  revision  Int          @default(0)
+  ownerId   String
+  owner     User         @relation(fields: [ownerId], references: [id])
+  columns   Column[]
+  cards     Card[]
+  events    BoardEvent[]
+  createdAt DateTime     @default(now())
+}
+
+// Column and Card ids come from the client so optimistic creates don't need
+// an id swap once the server confirms them.
+model Column {
+  id       String @id
+  boardId  String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title    String
+  position String
+  cards    Card[]
+
+  @@index([boardId])
+}
+
+model Card {
+  id          String   @id
+  boardId     String
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  columnId    String
+  column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @default("")
+  position    String   @db.VarChar(128)
+  updatedAt   DateTime @updatedAt
+
+  @@index([boardId])
+  @@index([columnId, position])
+}
+
+model BoardEvent {
+  id        Int      @id @default(autoincrement())
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  revision  Int
+  opId      String
+  actorId   String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, revision])
+  @@unique([boardId, opId])
+}
