@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kanban
+      POSTGRES_PASSWORD: kanban
+      POSTGRES_DB: kanban
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kanban']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://kanban:kanban@postgres:5432/kanban
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-do-not-use-in-prod}
+      CORS_ORIGIN: http://localhost:3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # The browser talks to the server directly, so this is the host-facing URL.
+        NEXT_PUBLIC_SERVER_URL: http://localhost:4000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - server
+
+volumes:
+  pgdata:
