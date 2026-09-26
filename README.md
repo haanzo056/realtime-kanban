@@ -1,5 +1,7 @@
 # realtime-kanban
 
+[![CI](https://github.com/haanzo056/realtime-kanban/actions/workflows/ci.yml/badge.svg)](https://github.com/haanzo056/realtime-kanban/actions/workflows/ci.yml) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white) ![License](https://img.shields.io/github/license/haanzo056/realtime-kanban)
+
 A kanban board several people can edit at once. Cards move between columns with drag and drop, changes show up immediately for whoever made them and a moment later for everyone else, and you can see who else has the board open and where their cursor is.
 
 ```
